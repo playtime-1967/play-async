@@ -12,6 +12,10 @@ path = "src/hello_world.rs"
 name = "echo"
 path = "src/echo.rs"
 
+[[bin]] # Echo UDP
+name = "echo-udp"
+path = "src/echo-udp.rs"
+
 [[bin]] # Connect
 name = "connect"
 path = "src/connect.rs"
