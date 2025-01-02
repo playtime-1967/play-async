@@ -16,10 +16,14 @@ path = "src/echo.rs"
 name = "echo-udp"
 path = "src/echo-udp.rs"
 
+[[bin]] # UDP Client
+name = "udp-client"
+path = "src/udp-client.rs"
+
 [[bin]] # Connect
 name = "connect"
 path = "src/connect.rs"
-bytes="1.9"
+
 
 [dependencies]
 tokio = { version = "1.42", features = ["full"] }

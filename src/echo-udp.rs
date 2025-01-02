@@ -21,7 +21,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         datagram_message: None,
     };
 
-    // This starts the server task.
     server.run().await?;
 
     Ok(())
@@ -39,6 +38,8 @@ struct UDPServer {
 
 impl UDPServer {
     pub async fn run(self) -> Result<(), io::Error> {
+        //Destructuring in Rust; extract the fields of the struct into local variables so that they can be more conveniently accessed and potentially modified.
+        //Takes ownership of the self instance- The method owns the fields.
         let UDPServer {
             socket,
             mut buf,
