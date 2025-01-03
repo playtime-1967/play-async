@@ -24,6 +24,10 @@ path = "src/udp-client.rs"
 name = "connect"
 path = "src/connect.rs"
 
+[[bin]] # Proxy
+name = "proxy"
+path = "src/proxy.rs"
+
 
 [dependencies]
 tokio = { version = "1.42", features = ["full"] }
