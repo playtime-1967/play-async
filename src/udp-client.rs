@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use std::env;
 use std::error::Error;
 use std::io::{stdin, Read};

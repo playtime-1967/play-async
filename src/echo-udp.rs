@@ -1,6 +1,4 @@
 // An UDP echo server that just sends back everything that it receives.
-
-#![allow(warnings)]
 use std::error::Error;
 use std::net::SocketAddr;
 use std::{env, io};

@@ -32,6 +32,9 @@ path = "src/proxy.rs"
 name = "tinydb"
 path = "src/tiny-db.rs"
 
+[[bin]] # chat
+name = "chat"
+path = "src/chat.rs"
 
 [dependencies]
 tokio = { version = "1.42", features = ["full"] }
@@ -39,4 +42,6 @@ tokio-util = { version = "0.7", features = ["full"] }
 tokio-stream = "0.1"
 futures = { version = "0.3", features = ["thread-pool"]}
 bytes = "1.0"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "ansi", "env-filter", "tracing-log"] }
+tracing= "0.1"
 

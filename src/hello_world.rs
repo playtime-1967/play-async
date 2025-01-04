@@ -1,5 +1,4 @@
 // A simple client that opens a TCP stream, writes "hello world\n", and closes the connection.
-#![allow(warnings)]
 use std::error::Error;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream, UdpSocket};
