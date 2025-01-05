@@ -84,6 +84,7 @@ impl Peer {
         // Get the client socket address
         let addr = framed_stream.get_ref().peer_addr()?;
         // Create a channel for this peer
+        //Unbounded channels allow infinite messages but can grow in memory. Bounded channels have a fixed capacity, providing backpressure.
         let (sx, rx) = mpsc::unbounded_channel();
 
         // Add an entry for this `Peer` in the shared state map.
@@ -116,6 +117,7 @@ async fn process(
     let mut peer = Peer::new(state.clone(), framed_stream).await?;
 
     // A client has connected, let's let everyone know.
+    //This block ensures the MutexGuard (acquired via state.lock().await) is dropped as soon as it's no longer needed.
     {
         let mut state = state.lock().await;
         let msg = format!("{username} has joined the chat");
@@ -128,13 +130,13 @@ async fn process(
         //Each iteration of the loop re-invokes tokio::select!, re-subscribing to the futures (e.g., peer.rx.recv() and peer.framed_stream.next()).
         //Any unfinished tasks from the previous iteration remain active and are checked again in the next iteration.
         tokio::select! {
-            // A message was received from a peer. Send it to the current user.
+            // A message was received from a peer. Send it to the current peer.
             Some(msg) = peer.rx.recv() => {
                 peer.framed_stream.send(&msg).await?;
             }
             result = peer.framed_stream.next() => match result {
                 Some(Ok(msg)) => {
-                    // A message was received from the current user, we should broadcast this message to the other users.
+                    // A message was received from the current peer, we should broadcast this message to the other peers.
                     let mut state = state.lock().await;
                     let msg = format!("{username}: {msg}");
 
@@ -166,7 +168,6 @@ async fn process(
 
     Ok(())
 }
-
 
 //How to run- 3 or more terminals
 //1- cargo run --bin chat
