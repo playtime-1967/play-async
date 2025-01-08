@@ -1,11 +1,9 @@
-use mini_redis::client;
-use std::error::Error;
+use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream, UdpSocket};
+use tokio::spawn;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tokio::time::{sleep, Duration};
-use tokio::{spawn, stream};
 use tokio_stream::StreamExt;
 #[tokio::main]
 async fn main() {
@@ -64,6 +62,36 @@ async fn main() {
     while let Some(message) = rx.recv().await {
         println!("GOT = {}", message);
     }
+
+    //------------------------------------------- I/O
+    //Read some bytes
+    let mut f = File::open("src/foo.txt").await.unwrap();
+    let mut buffer = [0; 10];
+    //When read() returns Ok(0), this signifies that the stream is closed. Any further calls to read() will complete immediately with Ok(0)
+    let size = f.read(&mut buffer).await.unwrap(); // returning the number of bytes read
+    println!("The bytes:{size} {:?}", &buffer[..size]);
+
+    //read_to_end
+    let mut buffer = Vec::new();
+
+    f.read_to_end(&mut buffer).await.unwrap();
+    println!("The bytes {:?}", &buffer[..]);
+
+    //Write
+    let mut f = File::create("src/foo2.txt").await.unwrap();
+
+    // Writes some prefix of the byte string, but not necessarily all of it.
+    let n = f.write(b"bye bytes.").await.unwrap();
+    println!("Wrote the first {} bytes of 'bye bytes'.", n);
+
+    //writes the entire buffer into the writer
+    f.write_all(b"bye bytes.").await.unwrap();
+
+    //tokio::io::copy asynchronously copies the entire contents of a reader into a writer.
+    let mut reader: &[u8] = b"hello";
+    let mut file = File::create("src/foo.txt").await.unwrap();
+
+    tokio::io::copy(&mut reader, &mut file).await.unwrap();
 }
 
 async fn async_work() -> i32 {
