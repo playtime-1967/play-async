@@ -18,7 +18,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 //1- run the powershell script as a server.
-//C:\TMM\github\sample\tcp_listener
+//C:\TMM\github\sample\ and run:  .\tcp_listener.ps1
 //wait till it's listening
 // 2- run the app
 //cargo run --bin hw

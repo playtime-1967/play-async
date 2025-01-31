@@ -91,6 +91,15 @@ fn handle_request(line: &str, db: &Arc<Database>) -> Response {
                 previous,
             }
         }
+        Request::Del { key } => match db.get(&key) {
+            Some(_) => {
+                db.remove(&key).expect("msg");
+                Response::Del { key }
+            }
+            None => Response::Error {
+                msg: format!("no key {key}"),
+            },
+        },
     }
 }
 
@@ -98,6 +107,7 @@ fn handle_request(line: &str, db: &Arc<Database>) -> Response {
 enum Request {
     Get { key: String },
     Set { key: String, value: String },
+    Del { key: String },
 }
 
 impl Request {
@@ -127,6 +137,15 @@ impl Request {
                     value: value.to_string(),
                 })
             }
+            Some("DEL") => {
+                let key = parts.next().ok_or("GET must be followed by a key")?;
+                if parts.next().is_some() {
+                    return Err("DEl's key must not be followed by anything".into());
+                }
+                Ok(Request::Del {
+                    key: key.to_string(),
+                })
+            }
             Some(cmd) => Err(format!("unknown command: {cmd}")),
             None => Err("empty input".into()),
         }
@@ -143,6 +162,9 @@ enum Response {
         value: String,
         previous: Option<String>,
     },
+    Del {
+        key: String,
+    },
     Error {
         msg: String,
     },
@@ -157,6 +179,7 @@ impl Response {
                 ref value,
                 ref previous,
             } => format!("set {key} = `{value}`, previous: {previous:?}"),
+            Response::Del { ref key  } => format!("deleted {key}!"),
             Response::Error { ref msg } => format!("error: {msg}"),
         }
     }
@@ -172,3 +195,4 @@ impl Response {
 // GET foobar
 // SET foobar blah
 // GET foobar
+// DEL foobar
