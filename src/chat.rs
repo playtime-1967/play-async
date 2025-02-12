@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     std::env::set_var("RUST_LOG", "tokio=trace"); //to enable additional traces emitted by Tokio itself
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env().add_directive("chat=info".parse()?))
-        // to track the lifecycle of spawned tasks on the Tokio runtime.
+        //to track the lifecycle of spawned tasks on the Tokio runtime.
         .with_span_events(FmtSpan::FULL)
         .init();
 
@@ -40,13 +40,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         });
     }
 }
-//------------------------------------------------------------------------------
 
-//The two ends(sender and receive) of the communication channel
+//the two ends(sender and receive) of the communication channel
 type Sx = mpsc::UnboundedSender<String>;
 type Rx = mpsc::UnboundedReceiver<String>;
 
-//Shared reflects the roles of the chat server.
 struct Shared {
     peers: HashMap<SocketAddr, Sx>,
 }
@@ -57,7 +55,7 @@ impl Shared {
         }
     }
 
-    // Send a `LineCodec` encoded message to every peer, except for the sender.
+    //send a `LineCodec` encoded message to every peer, except for the sender.
     async fn broadcast(&mut self, sender: SocketAddr, message: &str) {
         for peer in self.peers.iter_mut() {
             if *peer.0 != sender {
@@ -67,34 +65,29 @@ impl Shared {
     }
 }
 
-//--------------------------------------------------------------------------------
 //Peer reflects the roles of a client.
 struct Peer {
-    // handle the socket.
+    //handle the Peer's socket.
     framed_stream: Framed<TcpStream, LinesCodec>,
-    // receive messages from peers.
+    //receive messages from peers.
     rx: Rx,
 }
 impl Peer {
     async fn new(
         state: Arc<Mutex<Shared>>,
         framed_stream: Framed<TcpStream, LinesCodec>,
-    ) -> io::Result<Peer> //A specialized [Result] type for I/O operations
-    {
-        // Get the client socket address
+    ) -> io::Result<Peer> {
         let addr = framed_stream.get_ref().peer_addr()?;
-        // Create a channel for this peer
-        //Unbounded channels allow infinite messages but can grow in memory. Bounded channels have a fixed capacity, providing backpressure.
+        //create a channel for the peer. Unbounded channels allow infinite messages but can grow in memory. Bounded channels have a fixed capacity, providing backpressure.
         let (sx, rx) = mpsc::unbounded_channel();
 
-        // Add an entry for this `Peer` in the shared state map.
         state.lock().await.peers.insert(addr, sx);
 
         Ok(Peer { framed_stream, rx })
     }
 }
 
-// Process an individual chat client
+//process an individual chat peer
 async fn process(
     state: Arc<Mutex<Shared>>,
     stream: TcpStream,
@@ -107,17 +100,17 @@ async fn process(
     let username = match framed_stream.next().await {
         Some(Ok(line)) => line,
         _ => {
-            // We didn't get a line so we return early here.
-            tracing::error!("Failed to get username from {}. Client disconnected.", addr);
+            //didn't get a line so return early here.
+            tracing::error!("Failed to get username from {}. Peer disconnected.", addr);
             return Ok(());
         }
     };
 
-    // Register our peer with state which internally sets up some channels.
+    //register the peer with state which internally sets up some channels.
     let mut peer = Peer::new(state.clone(), framed_stream).await?;
 
-    // A client has connected, let's let everyone know.
-    //This block ensures the MutexGuard (acquired via state.lock().await) is dropped as soon as it's no longer needed.
+    //a peer has connected, let's let everyone know.
+    //MutexGuard 'state.lock()' is dropped as soon as it's no longer needed.
     {
         let mut state = state.lock().await;
         let msg = format!("{username} has joined the chat");
@@ -125,24 +118,22 @@ async fn process(
         state.broadcast(addr, &msg).await;
     }
 
-    // Process incoming messages until our stream is exhausted by a disconnect.
+    //process incoming messages until the stream is exhausted by a disconnect.
     loop {
-        //Each iteration of the loop re-invokes tokio::select!, re-subscribing to the futures (e.g., peer.rx.recv() and peer.framed_stream.next()).
-        //Any unfinished tasks from the previous iteration remain active and are checked again in the next iteration.
+        //any unfinished tasks from the previous iteration remain active and are checked again in the next iteration.
         tokio::select! {
-            // A message was received from a peer. Send it to the current peer.
+            //a message was received from a peer. Send it to the current peer.
             Some(msg) = peer.rx.recv() => {
                 peer.framed_stream.send(&msg).await?;
             }
             result = peer.framed_stream.next() => match result {
                 Some(Ok(msg)) => {
-                    // A message was received from the current peer, we should broadcast this message to the other peers.
+                    //a message was received from the current peer. Broadcast it to the other peers.
                     let mut state = state.lock().await;
                     let msg = format!("{username}: {msg}");
-
+                    tracing::info!("{}", msg);
                     state.broadcast(addr, &msg).await;
                 }
-                // An error occurred.
                 Some(Err(e)) => {
                     tracing::error!(
                         "an error occurred while processing messages for {}; error = {:?}",
@@ -150,13 +141,13 @@ async fn process(
                         e
                     );
                 }
-                // The stream has been exhausted.
+                //the stream has been exhausted.
                 None => break,
             },
         }
     }
 
-    //Means the client was disconnected! Let's let everyone still connected know about it.
+    //the peer disconnected. Let everyone still connected know about it.
     {
         let mut state = state.lock().await;
         state.peers.remove(&addr);
@@ -168,8 +159,3 @@ async fn process(
 
     Ok(())
 }
-
-//How to run- 3 or more terminals
-//1- cargo run --bin chat
-//2- telnet localhost 6142
-//3- telnet localhost 6142
