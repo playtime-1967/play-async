@@ -1,6 +1,6 @@
 
 # Async programming with Tokio
-covering cross-task communication, async channels, locks, TCP/UDP sockets, and task cancellation; implemented a chat server with user notifications and message broadcasting, and a HashMap server allowing clients to perform CRUD operations on data.
+Covering cross-task communication, async channels, locks, TCP/UDP sockets, and task cancellation; implemented a chat server with user notifications and message broadcasting, and a HashMap server allowing clients to perform CRUD operations on data.
 
 -------------
 # 1- Chat App  
@@ -31,4 +31,4 @@ telnet 127.0.0.1 6142
 ```  
 
 Example Output:  
-![chat-terminal](https://github.com/playtime-1967/play-async/tree/master/raw/chat-terminal.jpg) 
+![chat-terminal](https://github.com/playtime-1967/play-async/blob/master/raw/chat-terminal.jpg) 
