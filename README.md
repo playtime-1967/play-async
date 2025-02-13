@@ -1,6 +1,6 @@
 
 # Async programming with Tokio
-Covering cross-task communication, async channels, locks, TCP/UDP sockets, and task cancellation; implemented a chat server with user notifications and message broadcasting, and a HashMap server allowing clients to perform CRUD operations on data.
+Covering cross-task communication, async channels, locks, TCP/UDP sockets, and task cancellation; implemented a chat server with user notifications and message broadcasting, a key-value in-memory server enabling clients to perform CRUD operations, and a proxy server that forwards data between a client and a target server.
 
 -------------
 # 1- Chat App  
@@ -118,3 +118,30 @@ error: no key unknown
 
 Example Output:  
 ![key-value-storage-terminal](https://github.com/playtime-1967/play-async/blob/master/raw/key-value-storage-terminal.jpg) 
+
+--------------------
+
+# 3- Proxy Server
+
+A lightweight **TCP proxy server** built with [Tokio](https://tokio.rs/). It listens for incoming connections, forwards data between a client and a target server, and allows seamless communication between applications.
+
+## Features
+- Asynchronous I/O
+- Bidirectional data transfer
+
+### Run the Server
+```sh
+cargo run --bin 127.0.0.1:2748 127.0.0.1:4162
+```
+- The first argument (**127.0.0.1:2748**) is the **proxy's listening address**.  
+- The second argument (**127.0.0.1:4162**) is the **destination server address** where traffic will be forwarded.  
+
+If no arguments are provided, it defaults to:
+- **Listening on:** `127.0.0.1:2748`  
+- **Forwarding to:** `127.0.0.1:4162`  
+
+## Usage
+1. Start your **destination server** on `127.0.0.1:4162` (you can run the key-value storage server as the destination and observe how it functions exactly as if the client were connecting to it directly, but this time through the proxy server).  
+2. Run the **proxy server** (as shown above).  
+3. Connect via `nc` (Netcat) or `telnet` to `127.0.0.1:2748`.  
+4. The proxy will forward all traffic to `127.0.0.1:4162`.  
