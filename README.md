@@ -45,6 +45,7 @@ A lightweight asynchronous key-value storage server built using Tokio. It suppor
 - Thread-safe in-memory storage
 - Concurrent client support
 - Basic command support: `GET`, `SET`, `DEL`  
+- Custom error handling and response serialization  
 
 ### **Run the Server**  
 ```sh
