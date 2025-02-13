@@ -7,7 +7,7 @@ use tokio::net::TcpListener;
 use tokio_stream::StreamExt;
 use tokio_util::codec::{Framed, LinesCodec};
 
-//Database will be shared via `Arc`, so to mutate the internal map we're going to use a `Mutex` for interior mutability.
+//to mutate the internal map we're going to use a `Mutex`.
 struct Database {
     map: Mutex<HashMap<String, String>>,
 }
@@ -16,13 +16,13 @@ struct Database {
 async fn main() -> Result<(), Box<dyn Error>> {
     let addr = env::args()
         .nth(1)
-        .unwrap_or_else(|| "127.0.0.1:8080".to_string());
+        .unwrap_or_else(|| "127.0.0.1:4162".to_string());
 
     let listener = TcpListener::bind(&addr).await?;
     println!("Listening on: {addr}");
 
-    //Create the shared state of this server that will be shared amongst all clients.
-    //Usage of `Arc` here which will be used to ensure that each independently spawned client will have a reference to the in-memory database.
+    //shared state amongst all clients.
+    //ensure each client will have a reference to the storage.
     let mut initial_db = HashMap::new();
     initial_db.insert("foo".to_string(), "bar".to_string());
     let db = Arc::new(Database {
@@ -32,22 +32,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         match listener.accept().await {
             Ok((socket, _)) => {
-                //Creating a new reference of the database for the connected client to use.
+                //creating a new reference of the storage for the connected client.
                 let db = db.clone();
 
                 tokio::spawn(async move {
-                    // Since our protocol is line-based we use `tokio_codecs`'s `LineCodec` to convert our stream of bytes, `socket`, into a `Stream` of lines
-                    // as well as convert our line based responses into a stream of bytes.
+                    //convert the stream of bytes into a stream of lines.
                     let mut lines = Framed::new(socket, LinesCodec::new());
 
-                    //For every line we get back from the `Framed` decoder, we parse the request.
                     while let Some(result) = lines.next().await {
                         match result {
                             Ok(line) => {
                                 let response = handle_request(&line, &db);
 
                                 let response = response.serialize();
-                                //lines.send(): Appends a newline and return back the response to the client.
+                                //return back the response to the client.
                                 if let Err(e) = lines.send(response.as_str()).await {
                                     println!("error on sending response; error = {e:?}");
                                 }
@@ -58,7 +56,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
 
-                    // The connection will be closed at this point as `lines.next()` has returned `None`.
+                    //the connection will be closed at this point as `lines.next()` has returned `None`.
                 });
             }
             Err(e) => println!("error accepting socket; error = {e:?}"),
@@ -103,7 +101,7 @@ fn handle_request(line: &str, db: &Arc<Database>) -> Response {
     }
 }
 
-//-------------------------------------------------------
+
 enum Request {
     Get { key: String },
     Set { key: String, value: String },
@@ -151,7 +149,7 @@ impl Request {
         }
     }
 }
-//----------------------------------------------------------------------------
+
 enum Response {
     Value {
         key: String,
@@ -179,20 +177,8 @@ impl Response {
                 ref value,
                 ref previous,
             } => format!("set {key} = `{value}`, previous: {previous:?}"),
-            Response::Del { ref key  } => format!("deleted {key}!"),
+            Response::Del { ref key } => format!("deleted {key}!"),
             Response::Error { ref msg } => format!("error: {msg}"),
         }
     }
 }
-
-// How to run
-//1- cargo run --bin tinydb
-//2- cargo run --bin connect 127.0.0.1:8080
-// type in the client terminal:
-// GET foo
-// SET foo blah
-// GET foo
-// GET foobar
-// SET foobar blah
-// GET foobar
-// DEL foobar

@@ -3,11 +3,6 @@ name = "play-async"
 version = "0.1.0"
 edition = "2021"
 
-
-[[bin]] # Hello world Client
-name = "hw"
-path = "src/hello_world.rs"
-
 [[bin]] # Echo
 name = "echo"
 path = "src/echo.rs"
@@ -28,9 +23,9 @@ path = "src/connect.rs"
 name = "proxy"
 path = "src/proxy.rs"
 
-[[bin]] # tiny key-value db
-name = "tinydb"
-path = "src/tiny-db.rs"
+[[bin]] # key-value storage
+name = "key-value-storage"
+path = "src/key-value-storage.rs"
 
 [[bin]] # chat
 name = "chat"
