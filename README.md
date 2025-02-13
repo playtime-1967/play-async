@@ -17,18 +17,103 @@ Run the chat server with:
 ```sh
 cargo run --bin chat 127.0.0.1:6142
 ```  
-or  
+or   specify a port
 ```sh
 cargo run --bin chat
 ```  
+The server will start listening on **127.0.0.1:6142** by default.  
+
 Clients/Peers can connect via `nc` (Netcat), `telnet` or a custom client:  
 ```sh
 nc 127.0.0.1 6142
 ```  
-or  
+or specify a port  
 ```sh
 telnet 127.0.0.1 6142
 ```  
 
 Example Output:  
 ![chat-terminal](https://github.com/playtime-1967/play-async/blob/master/raw/chat-terminal.jpg) 
+
+-----------
+# 2- Key-value Storage Server
+A lightweight asynchronous key-value storage server built using Tokio. It supports GET, SET, and DELETE operations over a TCP connection, allowing multiple clients to interact concurrently.  
+
+
+## **Features**  
+- Asynchronous I/O
+- Thread-safe in-memory storage
+- Concurrent client support
+- Basic command support: `GET`, `SET`, `DEL`  
+
+### **Run the Server**  
+```sh
+cargo run --bin key-value-storage
+```
+or specify a port:
+```sh
+cargo run --bin key-value-storage 127.0.0.1:4162
+```
+The server will start listening on **127.0.0.1:4162** by default.
+
+Connect via `nc` (Netcat) or `telnet`
+```sh
+nc 127.0.0.1 4162
+```
+
+### **Supported Commands**  
+After connecting, you can execute the following commands:
+
+#### ✅ **Store a Value**
+```
+SET key value
+```
+Example:
+```
+SET foo bar
+```
+Response:
+```
+set foo = `bar`, previous: Some("old_value")
+```
+
+#### 🔍 **Retrieve a Value**
+```
+GET key
+```
+Example:
+```
+GET foo
+```
+Response:
+```
+foo = bar
+```
+
+#### ❌ **Delete a Key**
+```
+DEL key
+```
+Example:
+```
+DEL foo
+```
+Response:
+```
+deleted foo!
+```
+
+#### ❌ **Handle Nonexistent Keys**
+```
+GET unknown
+```
+```
+DEL unknown
+```  
+Response:
+```
+error: no key unknown
+```
+
+Example Output:  
+![key-value-storage-terminal](https://github.com/playtime-1967/play-async/blob/master/raw/key-value-storage-terminal.jpg) 
