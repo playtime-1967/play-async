@@ -145,3 +145,7 @@ If no arguments are provided, it defaults to:
 2. Run the **proxy server** (as shown above).  
 3. Connect via `nc` (Netcat) or `telnet` to `127.0.0.1:2748`.  
 4. The proxy will forward all traffic to `127.0.0.1:4162`.  
+
+⚠ If the destination server isn't running and the client sends a request to the proxy, the proxy will fail and exit with the following error:  
+
+**Error:** `Os { code: 111, kind: ConnectionRefused, message: "Connection refused" }`
